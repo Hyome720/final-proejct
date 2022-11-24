@@ -1,51 +1,66 @@
 <template>
-  <div>
-    <header>
-      <!-- <img class="background-img" :src="`https://source.unsplash.com/featured/?cinema`"> -->
-      <div class="container">
-        <div class="profile">
-          <div class="profile-image">
-            <img :src="currUser.profile_image ? 'http://127.0.0.1:8000' + currUser.profile_image : null" alt="">
+  <div class="mx-0 my-auto">
+    <div class="">
+      <!-- <img class="background-img" :src="backgroundImg"> -->
+      <img class="background-img" :src="`https://source.unsplash.com/featured/?cinema`" style="background-color: #000; opacity: 0.2;">
+      <div id="profile-view" class="container w-80 p-4 h-120">
+        <header>
+          <div class="container">
+            <div class="profile p-5">
+              <div class="profile-image">
+                <img id="profile-pic" :src="nowProfile.profile_image ? 'http://127.0.0.1:8000' + nowProfile.profile_image: require(`@/assets/default.png`)" alt="">
+              </div>
+              <div class="profile-user-settings">
+                <h1 class="fw-bold">{{ nowProfile.nickname }}</h1>
+                <!-- <button class="ig-btn profile-edit-ig-btn text-light">Edit Profile</button> -->
+                <!-- <button class="ig-btn profile-settings-ig-btn text-light fs-2" aria-label="profile settings"><i class="fas fa-cog" aria-hidden="true"></i></button> -->
+                <!-- 다르면 버튼 보이게 -->
+                <div v-if="currUser.username !== nowProfile.username">
+                  <button class="btn btn-primary" @click="follow" v-if="isFollowed">언팔로우</button>
+                  <button class="btn btn-primary" @click="follow" v-if="!isFollowed">팔로우</button>
+                </div>
+                <!-- <span v-else>
+                  프로필 수정
+                </span> -->
+              </div>
+              <div class="profile-stats">
+                <ul>
+                  <li><span class="profile-stat-count">{{ followers }}</span> followers</li>
+                  <li><span class="profile-stat-count">{{ followings }}</span> following</li>
+                </ul>
+              </div>
+              <div class="profile-stats">
+                <ul>
+                  <li><span class="profile-stat-count">{{ reviewed }}</span> reviewed</li>
+                  <li><span class="profile-stat-count">{{ liked }}</span> liked</li>
+                </ul>
+              </div>
+              <!-- <div class="profile-bio">
+                <p><span class="profile-real-name">Jane Doe</span> Loem ipsum dolor sit, amet consectetur adipisicing elit 📷✈️🏕️</p>
+              </div> -->
+            </div>
           </div>
-          <div class="profile-user-settings">
-            <h1 v-if="currUser.username !== currProfile.username" class="profile-user-name">{{ currProfile.nickname }}</h1>
-            <h1 v-else class="profile-user-name">{{ currUser.nickname }}</h1>
-            <!-- <button class="ig-btn profile-edit-ig-btn text-light">Edit Profile</button> -->
-            <!-- <button class="ig-btn profile-settings-ig-btn text-light fs-2" aria-label="profile settings"><i class="fas fa-cog" aria-hidden="true"></i></button> -->
-            <span v-if="currUser.username !== currProfile">
-              <button @click="follow" v-if="isFollowed">언팔로우</button>
-              <button @click="follow" v-if="!isFollowed">팔로우</button>
-            </span>
-            <!-- <span v-else>
-              프로필 수정
-            </span> -->
+        </header>
+        <div id="profile-box" class="d-flex align-items-start">
+          <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+            <button class="nav-link active" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">REVIEWS</button>
+            <button class="nav-link" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">LIKES</button>
+            <button class="nav-link" id="v-pills-messages-tab" data-bs-toggle="pill" data-bs-target="#v-pills-messages" type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false">Messages</button>
+            <button class="nav-link" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</button>
           </div>
-          <div class="profile-stats">
-            <ul>
-              <li><span class="profile-stat-count">{{ followers }}</span> followers</li>
-              <li><span class="profile-stat-count">{{ followings }}</span> following</li>
-            </ul>
+          <div class="tab-content" id="v-pills-tabContent">
+            <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabindex="0">
+              <ProfileList />
+            </div>
+            <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabindex="0">
+              <ProfileList />
+            </div>
+            <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab" tabindex="0">...</div>
+            <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab" tabindex="0">...</div>
           </div>
-          <div class="profile-stats">
-            <ul>
-              <li><span class="profile-stat-count">164</span> watched</li>
-              <li><span class="profile-stat-count">188</span> liked</li>
-            </ul>
-          </div>
-          <!-- <div class="profile-bio">
-            <p><span class="profile-real-name">Jane Doe</span> Loem ipsum dolor sit, amet consectetur adipisicing elit 📷✈️🏕️</p>
-          </div> -->
         </div>
       </div>
-      </header>
-      <main>
-      <div class="container">
-        <div class="gallery">
-          <ProfileListItem v-for="review in userProfile" :key="review.id" :review="review" @click="goToDetail(review.movie)"  />
-        </div>
-        <!-- <div class="loader"></div> -->
-      </div>
-      </main>
+    </div>
   </div>
 
 </template>
@@ -54,38 +69,73 @@
 import axios from 'axios'
 import api from "@/api/api"
 import { mapState, mapActions } from 'vuex'
-import ProfileListItem from '@/components/profile/ProfileListItem'
+import ProfileList from '@/components/profile/ProfileList'
 
 export default {
   name: 'ProfileView',
   components: {
-    ProfileListItem,
+    ProfileList,
   },
   data() {
     return {
       followers: 0,
       followings: 0,
       isFollowed: null,
+      nowProfile: null,  // 프로필 페이지에서 보여줄 유저 (이미지 O)
+      backgroundImg: null,
     }
   },
   computed: {
     ...mapState([
       'token',
-      'currUser',
-      'userProfile',
-      'currProfile',
-    ])
+      'currUser',  // 로그인 유저 (기본 정보)
+      'userReviews',  // 로그인 유저 (리뷰 정보)
+      'userLikes',  // 로그인 유저 (리뷰 정보)
+    ]),
+    reviewed() {
+      return this.userReviews.length
+    },
+    liked() {
+      return this.userLikes.length
+    },
   },
   methods: {
     ...mapActions([
-      'getUserProfile',
+      'getUserReviews',
+      'getUserLikes',
     ]),
     goToDetail(id) {
-      console.log('클릭', id)
+      // console.log('클릭', id)
       this.$router.push({ name: 'DetailView', params: { movie_id: id }})
     },
+    getNowProfile() {
+      // 리뷰에서 타고 넘어왔으면 스토어의 리뷰 유저 정보 가져오기
+      // console.log('프로필페이지')
+      if (this.$route.params.username !== this.currUser.username) {
+        // console.log('리뷰타고왔어')
+        axios({
+          method: 'get',
+          url: api.accounts.currUserInfo(this.$route.params.username),
+          headers: {
+            Authorization: `Token ${ this.token }`
+          }
+        })
+          .then((res) => {
+            // console.log('리뷰쓴 유저 프로필이야')
+            // console.log(res)
+            this.nowProfile = res.data
+            this.backgroundImg = 'https://image.tmdb.org/t/p/original' + this.userReviews[Math.floor(Math.random()*(this.userReviews.length))].movie_backdrop_path
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+        } else {
+        // console.log('내프로필볼래')
+        // 자기 프로필 보는거라면 로그인 유저 정보로 저장
+        this.nowProfile = this.currUser
+      }
+    },
     follow() {
-      console.log(this.token)
       axios({
         method: 'post',
         url: api.accounts.follow(this.$route.params.username),
@@ -94,7 +144,7 @@ export default {
         }
       })
       .then((res) => {
-        console.log('팔로잉워', res)
+        // console.log('팔로잉워', res)
         this.isFollowed = res.data.is_follow
         this.followers = res.data.followers
         this.followings = res.data.followings
@@ -105,29 +155,35 @@ export default {
       })
     },
     getInitialFollowers() {
-      console.log(api.accounts.followers(this.$route.params.username))
       axios({
         method: 'get',
-        url: api.accounts.followers(this.$route.params.username)
+        url: api.accounts.followers(this.$route.params.username),
+        headers: {
+          Authorization: `Token ${this.token}`
+        }
       })
       .then((res) => {
+        // console.log(res)
         this.followers = res.data.length
-        console.log('팔로워수', res.data)
-        console.log('팔로워수', res.data.length)
+        this.isFollowed = Boolean(res.data.filter(follower => follower.username === this.currUser.username).length)
+        // console.log('팔로워수', res.data)
+        // console.log('팔로워수', res.data.length)
       })
       .catch((err) => {
         console.log(err)
       })
     },
     getInitialFollowings() {
-      console.log(api.accounts.followers(this.$route.params.username))
       axios({
         method: 'get',
-        url: api.accounts.followings(this.$route.params.username)
+        url: api.accounts.followings(this.$route.params.username),
+        headers: {
+          Authorization: `Token ${this.token}`
+        }
       })
       .then((res) => {
+        // console.log('팔로잉수', res.data.length)
         this.followings = res.data.length
-        console.log('팔로잉수', res.data.length)
       })
       .catch((err) => {
         console.log(err)
@@ -135,18 +191,38 @@ export default {
     },
   },
   created() {
-    this.getUserProfile()
+    this.getUserReviews()
+    this.getNowProfile()
     this.getInitialFollowers()
     this.getInitialFollowings()
-    console.log(this.userProfile[0].movie_backdrop_path)
+    this.getUserLikes()
   }
 }
 </script>
 
 <style lang="scss">
+#profile-view {
+  font-size: 10px;
+  background-color: $body-bg;
+  /* opacity: 0.85; */
+  border-radius: $borderRadius;
+  /* display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column; */
+}
+
+#profile-box {
+  font-size: 16px;
+}
+
+#profile-pic {
+  max-width: 17em;
+}
+
 .profile {
   /* border: 1px solid $primary; */
-  background-color: rgb(44, 44, 44);
+  
 }
 
 .profile-stats > ul {
@@ -289,6 +365,7 @@ img {
 }
 
 .gallery-item {
+  border-radius: $borderRadius;
     position: relative;
     flex: 1 0 22em;
     margin: 1em;

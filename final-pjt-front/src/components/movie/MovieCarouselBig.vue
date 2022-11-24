@@ -1,6 +1,6 @@
 <template>
   <carousel-3d
-    v-if="shuffledRecommendMovies"
+    v-if="recommendMovies"
     :controls-visible="true"
     :inverse-scaling="200"
     :disable3d="false"
@@ -9,14 +9,30 @@
     autoplay
   >
     <slide 
-      v-for="(movie, idx) in shuffledRecommendMovies" 
+      v-for="(movie, idx) in recommendMovies" 
       :key="movie.id" 
       :index="idx" 
       @click="routeDetail(movie.id)"
     >
       <template slot-scope="{ index }" >
-        <div @click="routeDetail(movie.id)" class="movie-item" :data-index="index">
-          <img :src="'https://image.tmdb.org/t/p/original' + movie.poster_path" :height="500">
+        <div 
+          @click.stop="routeDetail(movie.id)" 
+          class="movie-item" 
+          :data-index="index"
+        >
+          <img 
+            :src="'https://image.tmdb.org/t/p/original' + movie.poster_path" :height="500"
+          >
+          <div class="movie-item-info">
+            <ul>
+              <div>
+                <li>
+                  <button v-if="isLiked === null" @click.stop="toggleMovieLike(currUser.id, movie.id)" style="z-index: 3;"><span span id="movie-detail-like" style="color: #dd3c3c;"><i class="fa-regular fa-heart me-2 fs-1"></i></span></button>
+                  <button v-else @click.stop="toggleMovieLike(currUser.id, movie.id)" style="color: #dd3c3c; z-index: 3;"><span span id="movie-detail-like" style="color: #e64949;"><i class="fa-solid fa-heart me-2 fs-1"></i></span></button>
+                </li>
+              </div>
+            </ul>
+          </div>
           <div class="movie-swipe-big">
             <div class="movie-title-big">{{ movie.title }} </div>
             <div class="movie-rating-big">예상별점 ⭐{{ (movie?.vote_average/2).toFixed(1) }}</div>
@@ -28,8 +44,10 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import { Carousel3d, Slide } from 'vue-carousel-3d'
+import axios from 'axios'
+import api from '@/api/api'
 
 export default {
   name: 'MovieCarouselBig',
@@ -37,16 +55,89 @@ export default {
     Carousel3d,
     Slide,
   },
+  data() {
+    return {
+      isLiked: null,
+    }
+  },
   computed: {
-    ...mapGetters([
-      'shuffledRecommendMovies',
+    ...mapState([
+      'recommendMovies',
+      'token',
+      'currUser',
     ]),
   },
   methods: {
+    ...mapActions([
+      'fetchRecommendMovies',
+    ]),
     routeDetail(id) {
       // console.log('클릭', id)
       this.$router.push({ name: 'DetailView', params: { movie_id: id }})
-    }
+    },
+    toggleMovieLike(userId, movieId) {
+      axios({
+        method: 'get',
+        url: api.movies.toggleMovieLike(userId, movieId),
+        headers: {
+          Authorization: `Token ${this.token}`
+        }
+      })
+        .then((res) => {
+          console.log(res)
+          if (this.isLiked === null) {
+            this.isLiked = movieId
+          } else {
+            this.isLiked = null
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
+    getInitialMovieLike() {
+      console.log(this.$route.params.movie_id)
+      axios({
+        method: 'get',
+        url: api.movies.getMovieLikedUsers(this.$route.params.movie_id),
+        headers: {
+          Authorization: `Token ${this.token}`
+        }
+      })
+        .then((res) => {
+          console.log(res.data)
+          this.isLiked = Boolean(res.data.filter(follower => follower.username === this.currUser.username).length)
+          console.log(this.isLiked)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
   },
+  created() {
+    this.fetchRecommendMovies()
+  }
 }
 </script>
+
+<style>
+.movie-item {
+  position: relative;
+}
+
+.movie-item:hover .movie-item-info,
+.movie-item:focus .movie-item-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.movie-item-info {
+    display: none;
+}
+</style>

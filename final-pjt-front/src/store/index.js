@@ -26,7 +26,8 @@ export default new Vuex.Store({
   state: {
     token: null,
     currUser: null,
-    userProfile: null,
+    userReviews: null,
+    userLikes: null,
 
     recommendMovies: null,
     nowPlayingMovies: null,
@@ -34,8 +35,8 @@ export default new Vuex.Store({
     romanceMovies: null,
     query: '',
     searchResults: '',
-    currProfile: null, // {username: '', nickname: ''}
-    selectedMovies: [],
+    saveSearch: null,
+    searchCompleted: false,
   },
   getters: {
     isLogin: state => !!state.token,
@@ -50,7 +51,7 @@ export default new Vuex.Store({
     },
     shuffledNowPlayingMovies(state) {
       const arr = state.nowPlayingMovies
-      let m = arr.length;
+      let m = arr?.length;
       while (m) {
         const i = Math.floor(Math.random() * m--);
         [arr[m], arr[i]] = [arr[i], arr[m]];
@@ -70,8 +71,11 @@ export default new Vuex.Store({
     SAVE_USER_DATA(state, userData) {
       state.currUser = userData
     },
-    SAVE_USER_PROFILE(state, userData) {
-      state.userProfile = userData
+    SAVE_USER_REVIEWS(state, userData) {
+      state.userReviews = userData
+    },
+    SAVE_USER_LIKES(state, userData) {
+      state.userLikes = userData
     },
 
     SAVE_RECOMMEND: (state, payload) => state.recommendMovies = payload,
@@ -79,9 +83,9 @@ export default new Vuex.Store({
     SAVE_ACTION: (state, payload) => state.actionMovies = payload,
     SAVE_ROMANCE: (state, payload) => state.romanceMovies = payload,
     SET_SEARCH_RESULTS: (state, payload) => state.searchResults = payload,
+    SAVE_SEARCH: (state, payload) => state.saveSearch = payload,
 
-    // 지금 클릭한 리뷰의 작성자 유저 정보
-    SAVE_CURR_PROFILE: (state, payload) => state.currProfile = payload,
+    // SAVE_CURR_Reviews: (state, payload) => state.reviewReviews = payload,
   },
   actions: {
     //////////////// accounts ////////////////
@@ -145,7 +149,11 @@ export default new Vuex.Store({
         .then(() => {
           context.commit('REMOVE_TOKEN')
           // alert('로그아웃 완료')
+          localStorage.removeItem('vuex')
           router.push({ name: 'MainView' })
+          context.commit('SAVE_USER_DATA', null)
+          context.commit('SAVE_USER_REVIEWS', null)
+          context.commit('SAVE_USER_LIKES', null)
         })
         .catch((err) => {
           console.log(err)
@@ -194,17 +202,21 @@ export default new Vuex.Store({
     //////////////// movies ////////////////
     fetchRecommendMovies(context) {
       // 로그인 했다면 맞춤 추천, 안했다면 TMDB 추천
-      if (this.state.token) {
+      if (context.state.token) {
         axios({
           method: 'get',
-          url: api.movies.recommendMovies(),
+          url: api.movies.recommendMovies(context.state.currUser.id),
+          headers: {
+            Authorization : `Token ${context.state.token}`
+          }
         })
           .then((res) => {
-            // console.log(res)
-            context.commit('SAVE_RECOMMEND', res)
+            console.log('추천 로그인맞춤')
+            console.log(res.data)
+            context.commit('SAVE_RECOMMEND', res.data)
           })
           .catch((error) => {
-            console.log(error)
+            console.log('추천영화 고장남', error)
           })
       } else {
         const MOVIE_URL = 'https://api.themoviedb.org/3/movie/popular'
@@ -231,6 +243,7 @@ export default new Vuex.Store({
     },
     fetchNowPlayingMovies(context) {
       const MOVIE_URL = 'https://api.themoviedb.org/3/movie/now_playing'
+      console.log(1)
       axios({
         method: 'get',
         // url: api.movies.nowPlayingMovies(),
@@ -241,6 +254,7 @@ export default new Vuex.Store({
         }
       })
         .then((response) => {
+          console.log('success')
           let res = response.data.results
           // console.log(res)
           context.commit('SAVE_NOW_PLAYING', res)
@@ -293,61 +307,87 @@ export default new Vuex.Store({
         })
     },
     fetchActionMovies(context) {
-      axios({
-        mehod: 'get',
-        url: api.movies.actionMovies()
-      })
-        .then((response) => {
-          console.log(response.data)
-          context.commit('SAVE_ACTION', response.data)
+      if (context.state.actionMovies === null) {
+        axios({
+          mehod: 'get',
+          url: api.movies.actionMovies()
         })
-        .catch((error) => {
-          console.log(error)
-        })
+          .then((response) => {
+            // console.log(response.data)
+            context.commit('SAVE_ACTION', response.data)
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     },
     fetchRomanceMovies(context) {
-      axios({
-        mehod: 'get',
-        url: api.movies.romanceMovies()
-      })
-        .then((response) => {
-          // console.log(response.data)
-          context.commit('SAVE_ROMANCE', response.data)
+      if (context.state.romanceMovies === null) {
+        axios({
+          mehod: 'get',
+          url: api.movies.romanceMovies()
         })
-        .catch((error) => {
-          console.log(error)
-        })
+          .then((response) => {
+            // console.log(response.data)
+            context.commit('SAVE_ROMANCE', response.data)
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
     },
-    showSearchPage(context, query) {  
+    showSearchPage(context, query) {
       axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${process.env.VUE_APP_TMDB}&language=ko&query=` + query + '&include_adult=false')
         .then((res) => {
+          context.commit('SAVE_SEARCH', query)
           context.commit('SET_SEARCH_RESULTS', res.data.results)
           router.push({name: 'MovieSearchView', params: { query: query }})
+          context.state.searchCompleted = !context.state.searchCompleted
         })
         .catch((err) => {
           console.log(err)
           console.log('서치에러')
         })
     },
-    getUserProfile(context) {
+    // 로그인 유저 리뷰 조회
+    getUserReviews(context) {
       axios({
         method: 'get',
-        url: api.movies.getUserProfile(context.state.currUser.username),
+        url: api.movies.getUserReviews(context.state.currUser.username),
         headers: {
           Authorization: `Token ${ context.state.token }`
         }
       })
         .then((res) => {
-          // console.log('유저가쓴리뷰')
-          // console.log(res)
-          context.commit('SAVE_USER_PROFILE', res.data)
+          context.commit('SAVE_USER_REVIEWS', res.data)
         })
         .catch((err) => {
           if (err.response.data.detail === '찾을 수 없습니다.') {
-            context.commit('SAVE_USER_PROFILE', [])
+            context.commit('SAVE_USER_REVIEWS', [])
           }
           console.log(err)
         })
-    }
+    },
+    // 로그인 유저 좋아요 조회
+    getUserLikes(context) {
+      console.log('likes')
+      console.log(api.movies.getUserLikedMovie(context.state.currUser.id))
+      console.log(`Token ${context.state.token}`)
+      axios({
+        method: 'get',
+        url: api.movies.getUserLikedMovie(context.state.currUser.id),
+        headers: {
+          Authorization: `Token ${context.state.token}`
+        }
+      })
+        .then((res) => {
+          console.log(res.data)
+          context.commit('SAVE_USER_LIKES', res.data)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+        console.log('likes 2')
+      }
   },
 })

@@ -1,40 +1,95 @@
 <template>
-  <div id="app" class='main-body'>
-    <nav>
-      <div :class="sidebarStatus ? 'sidebar-opened sidebar' : 'sidebar-closed sidebar'" @mouseleave="closeNav">
-        <p class="closebtn" @click="closeNav">&times;</p>
-        <v-sheet
-          color="rgb(17, 17, 17)"
-          class="pa-4"
+  <div id="app">
+    <div :class="sidebarStatus ? 'sidebar-opened sidebar' : 'sidebar-closed sidebar'" @mouseleave="closeNav">
+      <p class="closebtn" @click="closeNav">&times;</p>
+      <v-sheet
+        color="rgb(17, 17, 17)"
+        class="pa-4"
+      >
+        <v-avatar
+          class="mb-4"
+          color="grey darken-1"
+          size="64"
+        ></v-avatar>
+
+        <!-- <div style="color: white">{{ currUser?.username }}님의 프로필</div> -->
+      </v-sheet>
+
+      <v-divider></v-divider>
+
+      <v-list style="background-color: rgb(17, 17, 17)">
+        <v-list-item
+          v-for="[icon, text] in links"
+          :key="icon"
+          link
         >
-          <v-avatar
-            class="mb-4"
-            color="grey darken-1"
-            size="64"
-          ></v-avatar>
+          <v-list-item-icon dark>
+            <v-icon style="color: white">{{ icon }}</v-icon>
+          </v-list-item-icon>
 
-          <div style="color: white">{{ currUser?.username }}님의 프로필</div>
-        </v-sheet>
-
-        <v-divider></v-divider>
-
-        <v-list style="background-color: rgb(17, 17, 17)">
-          <v-list-item
-            v-for="[icon, text] in links"
-            :key="icon"
-            link
-          >
-            <v-list-item-icon dark>
-              <v-icon style="color: white">{{ icon }}</v-icon>
-            </v-list-item-icon>
-
-            <v-list-item-content dark>
-              <v-list-item-title style="color: white">{{ text }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
+          <v-list-item-content dark>
+            <v-list-item-title style="color: white">{{ text }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </div>
+    
+    <nav :class="[navBarStatus ? 'scroll-down' : '', navbar, navbar-expand, ps-4, pe-3, pt-4, pb-4, d-flex, justify-content-between]">
+    <!-- <nav class="navbar navbar-expand ps-4 pe-3 pt-4 pb-4 d-flex justify-content-between"> -->
+      <div class="logo" @click="reload">
+        <router-link :to="{ name: 'MainView' }">
+          <span>
+            neon lights
+          </span>
+        </router-link>
       </div>
-      <div class="logo">
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="search">
+          <input id="search-bar" class="form-control mt-2 me-2" type="search" placeholder="Search" aria-label="Search" autocomplete="" v-model="query" @keyup.enter="showSearchPage(query)">
+        </div>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>
+        </ul>
+        <!-- <div v-if="!isLogin" class="user-menu">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <router-link :to="{ name: 'LogInView' }" class="menu-items"><i class="fa-solid fa-user-plus fa-lg"></i></router-link>
+            </li>
+          </ul>
+        </div>
+        <div v-else class="nav-right scroll-down" style="height:60px; margin-top: -.5em;">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <router-link :to="{ name: 'ProfileView', params: {username: currUser?.username} }" class="openbtn menu-items">
+                <img 
+                class="openbtn "
+                id="navbar-profile-img"
+                :src="currUser.profile_image ? 'http://127.0.0.1:8000' + currUser.profile_image: require(`@/assets/default.png`)" 
+                style="margin-right: -.5em; border-radius: 50%; width: 3.5em; height: 3em;"
+                alt="">
+                {{ currUser?.nickname }}
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <button @click="openNav" class="openbtn menu-items" style="margin-left: -.5em;">☰</button> 
+            </li>
+            <li class="nav-item">
+              <span @click="logOut" class="openbtn logout-btn menu-items">
+                <i class="fa-solid fa-right-to-bracket fa-lg" style="backgroundColor: transparent"></i>
+              </span>
+            </li>
+          </ul> -->
+        <!-- </div> -->
+      </div>
+    </nav>
+
+    <!-- <nav :class="navBarStatus ? 'scroll-down' : ''">
+      <div class="logo" @click="reload">
         <router-link :to="{ name: 'MainView' }">
           <span>
             neon lights
@@ -42,22 +97,27 @@
         </router-link>
       </div>
       <div class="search">
-        <input id="search-bar" class="form-control me-2" type="search" placeholder="Search" aria-label="Search" autocomplete="" v-model="query" @keyup.enter="showSearchPage(query)">
+        <input id="search-bar" class="form-control mt-2 me-2" type="search" placeholder="Search" aria-label="Search" autocomplete="" v-model="query" @keyup.enter="showSearchPage(query)">
       </div>
-      <MovieSearchView :query="query" class='dp-none' />
       <div v-if="!isLogin" class="user-menu">
         <router-link :to="{ name: 'LogInView' }" class="menu-items"><i class="fa-solid fa-user-plus fa-lg"></i></router-link>
       </div>
-      <div v-else>
-        <router-link :to="{ name: 'ProfileView', params: {username: currUser?.username} }" class="menu-items">
-        {{ currUser?.nickname }}
+      <div v-else class="nav-right scroll-down" style="height:60px; margin-top: -.5em;">
+        <router-link :to="{ name: 'ProfileView', params: {username: currUser?.username} }" class="openbtn menu-items">
+          <img 
+          class="openbtn "
+          id="navbar-profile-img"
+          :src="currUser.profile_image ? 'http://127.0.0.1:8000' + currUser.profile_image: require(`@/assets/default.png`)" 
+          style="margin-right: -.5em; border-radius: 50%; width: 3.5em; height: 3em;"
+          alt="">
+          {{ currUser?.nickname }}
         </router-link>
-        <button class="openbtn" @click="openNav">☰</button> 
-        <span @click="logOut" class="logout-btn">
-          <i class="fa-solid fa-right-to-bracket fa-lg"></i>
+        <button @click="openNav" class="openbtn menu-items" style="margin-left: -.5em;">☰</button> 
+        <span @click="logOut" class="openbtn logout-btn menu-items">
+          <i class="fa-solid fa-right-to-bracket fa-lg" style="backgroundColor: transparent"></i>
         </span>
       </div>
-    </nav>
+    </nav> -->
     <router-view />
   </div>
 </template>
@@ -65,13 +125,9 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
-import MovieSearchView from '@/views/movie/MovieSearchView'
 
 export default ({
   name: 'App',
-  components: {
-    MovieSearchView
-  },
   data() {
     return {
       query: null,
@@ -82,12 +138,15 @@ export default ({
         ['mdi-inbox-arrow-down', '내가 작성한 리뷰'],
         ['mdi-delete', '팔로잉'],
         ['mdi-alert-octagon', 'Spam'],
-    ],
+      ],
+      windowTop: window.top.scrollY,
+      navBarStatus: false,
     }
   },  
   computed: {
     ...mapState([
       'currUser',
+      'searchCompleted',
     ]),
     ...mapGetters([
       'isLogin',
@@ -96,6 +155,11 @@ export default ({
   methods: {
     ...mapActions([
       'showSearchPage',
+      'fetchRecommendMovies',
+      'fetchNowPlayingMovies',
+      'fetchActionMovies',
+      'fetchRomanceMovies',
+      'getUserLikes',
     ]),
     logOut() {
       if (confirm('로그아웃 하실건가요?') == true){ 
@@ -103,13 +167,35 @@ export default ({
         this.$store.dispatch('logOut')
       }
     },
+    reload() {
+      this.$router.go() // 새로고침
+    },
     openNav() {
       this.sidebarStatus = true
     },
     closeNav() {
       this.sidebarStatus = false
     },
+    onScroll() {
+      this.windowTop = window.top.scrollY
+      if (this.windowTop > 50) {
+        this.navBarStatus = true
+      } else {
+        this.navBarStatus = false
+      }
+    }
   },
+  watch: {
+    searchCompleted() {
+      this.query = null
+    }
+  },
+  mounted() {
+    window.addEventListener("scroll", this.onScroll)
+  },
+  beforeDestroy() {
+    window.removeEventListener("scroll", this.onScroll)
+  }
 })
 
 </script>
@@ -144,9 +230,9 @@ ul,li,ol{list-style:none; padding: 0 !important;}
   color: #fff;
 }
 
-.main-body {
-  position: relative;
-}
+// #navbar-profile-img {
+//   position: relative;
+// }
 
 a {
   text-decoration:none;
@@ -167,6 +253,10 @@ nav {
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+.scroll-down {
+ background-color: rgb(0, 0, 0, 0.5)
 }
 
 nav a {
@@ -305,13 +395,9 @@ input {
 .openbtn {
   font-size: 20px;
   cursor: pointer;
-  background-color: #111;
+  background-color: $body-bg;
   color: white;
   padding: 10px 15px;
   border: none;
-}
-
-.dp-none {
-  display: none;
 }
 </style>

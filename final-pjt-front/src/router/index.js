@@ -5,10 +5,8 @@ import SignUpView from '@/views/accounts/SignUpView'
 import LogInView from '@/views/accounts/LogInView'
 import ProfileView from '@/views/accounts/ProfileView'
 import DetailView from '@/views/movie/DetailView'
-import ReviewDetailView from '@/views/movie/ReviewDetailView'
 import MovieSearchView from '@/views/movie/MovieSearchView'
 import NotFoundView from '@/views/NotFoundView'
-import MovieRecommendView from '@/views/movie/MovieRecommendView'
 
 Vue.use(VueRouter)
 
@@ -39,19 +37,9 @@ const routes = [
     component: ProfileView
   },
   {
-    path: '/review/:review_id',
-    name: 'ReviewDetailView',
-    component: ReviewDetailView
-  },
-  {
     path: '/search/:query',
     name: 'MovieSearchView',
     component: MovieSearchView
-  },
-  {
-    path: '/recommend/',
-    name: 'MovieRecommendView',
-    component: MovieRecommendView,
   },
   {
     path: '/404',

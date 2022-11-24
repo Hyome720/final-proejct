@@ -8,22 +8,17 @@
           <!-- 왼쪽 포스터 영역 -->
           <div class="col-md-4">
             <div id="movie-detail-poster">
-              <button @click="toggleMovieLike"><span span id="movie-detail-like" style="color: #e64949;"><i class="fa-regular fa-heart me-2 fs-1"></i></span></button>
+                <button v-if="!isLiked" @click="toggleMovieLike"><span span id="movie-detail-like" style="color: #dd3c3c;"><i class="fa-regular fa-heart me-2 fs-1"></i></span></button>
+                <button v-else @click="toggleMovieLike"><span span id="movie-detail-like" style="color: #e64949;"><i class="fa-solid fa-heart me-2 fs-1"></i></span></button>
               <img
                 :src="movie.poster_path ? 'https://image.tmdb.org/t/p/original' + movie.poster_path : 'https://image.tmdb.org/t/p/original' + movie.backdrop_path" class="img-fluid rounded-start w-100" alt="">
                 <MovieCreateReview :movie="movie" :userReview="userReview" @fetchAllReviews="fetchAllReviews"
               />
             </div>
-            <!-- <div v-if="userReview">
-              <MovieCreateReview :movie="movie" :userReview="userReview" @fetchAllReviews="fetchAllReviews" />
-            </div>
-            <div v-else>
-              <MovieCreateReview :movie="movie" @fetchAllReviews="fetchAllReviews" />
-            </div> -->
           </div>
           <!-- 오른쪽 영역 -->
           <div class="col-md-8">
-            <div class="card-body p-4">
+            <div class="card-body">
               <MovieDetail :movie="movie" :cast="cast" :director="director" />
               <MovieSimilar />
             </div>
@@ -64,22 +59,58 @@ export default {
       userReview: null,
       totalComments: null,
       reviews: null,
+      isLiked: null,
     }
   },
   computed: {
     ...mapState([
       'token',
       'currUser',
-
     ]),
   },
   created() {
     this.getMovieDetail()
     this.getCredits()
     this.fetchAllReviews()
+    this.getInitialMovieLike()
   },
   methods: {
+    toggleMovieLike() {
+      axios({
+        method: 'get',
+        url: api.movies.toggleMovieLike(this.currUser.id, this.$route.params.movie_id),
+        headers: {
+          Authorization: `Token ${this.token}`
+        }
+      })
+        .then((res) => {
+          this.isLiked = res.data
+          console.log(this.isLiked)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
+    getInitialMovieLike() {
+      console.log(this.$route.params.movie_id)
+      axios({
+        method: 'get',
+        url: api.movies.getMovieLikedUsers(this.$route.params.movie_id),
+        headers: {
+          Authorization: `Token ${this.token}`
+        }
+      })
+        .then((res) => {
+          console.log(res.data)
+          this.isLiked = Boolean(res.data.filter(follower => follower.username === this.currUser.username).length)
+          console.log(this.isLiked)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
     getMovieDetail() {
+      console.log(this.$route.params.movie_id)
         axios({
           method: 'get',
           url: API_URL + `/movies/${this.$route.params.movie_id}/`,
@@ -103,7 +134,7 @@ export default {
             }
           })
             .then((response) => {
-              // console.log(this.movie)
+              console.log(this.movie)
               console.log('저장완료', response)
             })
             .catch((error) => {
@@ -151,10 +182,10 @@ export default {
         }
       })
         .then((response)=>{
-          console.log(response.data)
           this.reviews = response.data.reverse()
+          // console.log(this.reviews)
           this.userReview = response.data.filter(review => this.currUser.username === review.username)
-          console.log(this.userReview)
+          // console.log(this.userReview)
         })
         .catch((error)=>{
           console.log(error);
@@ -177,7 +208,8 @@ export default {
   position: absolute;
   top: 1em;
   left: 1em;
-  ::after {
+  color: #dd3c3c;
+  /* ::after {
     content: '보고싶어요';
     display: block;
     font-weight: 500;
@@ -185,7 +217,7 @@ export default {
     font-size: .8rem;
     color: #e64949;
     inset: 0;
-  }
+  } */
 }
 
 .background-img {
@@ -196,6 +228,7 @@ export default {
   top: 0;
   opacity: 0.4;
   background: #575757;
+  z-index: -1;
   /* background-image: linear-gradient(rgba(0,0,0,.85) 15%,rgba(0,0,0,.2) 40%,#000 90%); */
 }
 
